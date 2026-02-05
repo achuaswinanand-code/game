@@ -2,111 +2,205 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Are We Telepathic?</title>
+<title>Spin & Dare</title>
+
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: linear-gradient(135deg, #ff9a9e, #fad0c4);
-  text-align: center;
-  padding: 30px;
-}
-.card {
-  background: white;
-  border-radius: 20px;
-  padding: 25px;
-  max-width: 400px;
-  margin: auto;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-}
-button {
-  padding: 10px 18px;
-  border: none;
-  border-radius: 10px;
-  background: #ff4b6e;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  margin: 5px;
-}
-select {
-  padding: 10px;
-  border-radius: 10px;
-  font-size: 16px;
-}
-#result {
-  margin-top: 15px;
-  font-size: 18px;
-  font-weight: bold;
-}
-.name {
-  color: #ff4b6e;
-}
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: radial-gradient(circle at top, #ff7eb3, #ff758c);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .container {
+    background: #fff;
+    padding: 30px;
+    border-radius: 25px;
+    width: 340px;
+    text-align: center;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+  }
+
+  h2 {
+    margin-bottom: 10px;
+  }
+
+  .wheel-wrap {
+    position: relative;
+    margin: 25px auto;
+    width: 220px;
+    height: 220px;
+  }
+
+  .pointer {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 28px;
+    z-index: 2;
+  }
+
+  .wheel {
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 10px solid #ff4d6d;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.3);
+  }
+
+  .half {
+    position: absolute;
+    width: 100%;
+    height: 50%;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: bold;
+    color: white;
+  }
+
+  .achu {
+    background: linear-gradient(135deg, #ff4d6d, #ff758c);
+    top: 0;
+  }
+
+  .gopu {
+    background: linear-gradient(135deg, #6a5acd, #7b68ee);
+    bottom: 0;
+    transform: rotate(180deg);
+  }
+
+  .center-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    border: 4px solid #ff4d6d;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 2;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(var(--rotation)); }
+  }
+
+  .spin {
+    animation: spin 3.5s cubic-bezier(.17,.67,.17,1) forwards;
+  }
+
+  .result {
+    margin-top: 15px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .dare {
+    margin-top: 10px;
+    font-size: 16px;
+    color: #444;
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 10px;
+  }
 </style>
 </head>
+
 <body>
 
-<div class="card">
-  <h2>🧠 Are We Telepathic?</h2>
-  <p>For <span class="name">Gopika</span> 💖</p>
-  <p id="question"></p>
+<div class="container">
+  <h2>🎡 Spin & Dare</h2>
+  <p>Who’s next? 😈</p>
 
-  <select id="choice">
-    <option value="">Choose secretly</option>
-  </select>
+  <div class="wheel-wrap">
+    <div class="pointer">⬇️</div>
 
-  <br><br>
-  <button onclick="reveal()">Reveal</button>
+    <div class="wheel" id="wheel">
+      <div class="half achu">Achu</div>
+      <div class="half gopu">Gopu</div>
+    </div>
 
-  <div id="result"></div>
+    <button class="center-btn" onclick="spinWheel()" id="spinBtn">
+      SPIN
+    </button>
+  </div>
+
+  <div class="result" id="result"></div>
+  <div class="dare" id="dare"></div>
 </div>
-
 <script>
-const rounds = [
-  { q: "Pick a color 💜", options: ["Red","Blue","Black","Pink","White","Purple","Green"] },
-  { q: "Pick a number 🔢", options: ["1","2","3","5","7","9","11"] },
-  { q: "Pick an emoji 😍", options: ["❤️","🔥","🥺","✨","😘","😊","💫"] },
-  { q: "Pick a time ⏰", options: ["Morning","Afternoon","Evening","Night","Midnight"] },
-  { q: "Pick a feeling 💭", options: ["Love","Happiness","Calm","Excited","Missing","Comfort"] },
-  { q: "Pick a place 🌍", options: ["Beach","Mountains","Home","Cafe","Temple","Park"] },
-  { q: "Pick a weather ☁️", options: ["Sunny","Rainy","Cloudy","Cold","Windy"] },
-  { q: "Pick a song mood 🎵", options: ["Romantic","Sad","Happy","Chill","Energetic"] },
-  { q: "Pick a flower 🌸", options: ["Rose","Lily","Jasmine","Sunflower","Lotus"] },
-  { q: "Pick a word 📝", options: ["Forever","Us","Promise","Together","Soulmate"] },
-  { q: "Pick a heart color 💖", options: ["Red ❤️","Pink 💗","Purple 💜","Black 🖤","White 🤍"] },
-  { q: "Pick a cute thing 🧸", options: ["Hug","Kiss","Smile","Cuddle","Hand-hold"] },
-  { q: "Pick a day 🌅", options: ["Monday","Friday","Saturday","Sunday"] },
-  { q: "Pick a memory type 📸", options: ["First meet","Call","Message","Laugh","Trip"] }
-];
+  const dares = [
+    "Tell him/her one thing you love about them ❤️",
+    "Send him/her a sweet voice note 🎧💖",
+    "Share a cute selfie with him/her 📸😍",
+    "Say what you miss most about him/her 🥺",
+    "Text him/her ‘I’m thinking about you’ 💭❤️",
+    "Name 3 things you admire about him/her 🌟",
+    "Send him/her a virtual hug 🤗",
+    "Sing a few lines of a song for him/her 🎤💕",
+    "Tell him/her your favorite memory together 💭💑",
+    "Send him/her a kiss emoji 💋",
+    "Say how he/she makes your day better ☀️❤️",
+    "Send him/her a good-morning or good-night message 🌙🌅",
+    "Describe a dream date with him/her 💕",
+    "Tell him/her why you are proud of him/her 🌈",
+    "Send a voice note saying his/her name softly 😍",
+    "Reveal something cute you’ve never told him/her 🤫❤️",
+    "Tell him/her what you fell for first 💘",
+    "Send an emoji that represents your relationship 💑",
+    "Say one thing you are thankful for about him/her 🙏",
+    "Share a photo that reminds you of him/her 📷💭",
+    "Describe him/her in three words ✨",
+    "Send him/her a flirty message 😘",
+    "Say what you want to do with him/her the next time you meet 🥰",
+    "Send a heart with his/her name ❤️",
+    "Tell him/her how he/she makes you feel safe 🤍",
+    "Share your favorite thing about his/her smile 😊",
+    "Promise one small thing you will always do for him/her 💍",
+    "Say one future plan you are excited to share with him/her 🌍",
+    "Send him/her a random ‘I miss you’ message 🥺",
+    "End by telling him/her ‘I love you’ in your own way 💖"
+  ];
 
-let round = Math.floor(Math.random() * rounds.length);
-let secret = rounds[round].options[Math.floor(Math.random() * rounds[round].options.length)];
+  function spinWheel() {
+    const wheel = document.getElementById("wheel");
+    const btn = document.getElementById("spinBtn");
+    const result = document.getElementById("result");
+    const dareBox = document.getElementById("dare");
 
-document.getElementById("question").innerText = rounds[round].q;
+    btn.disabled = true;
+    result.textContent = "";
+    dareBox.textContent = "";
 
-const select = document.getElementById("choice");
-rounds[round].options.forEach(opt => {
-  let o = document.createElement("option");
-  o.value = opt;
-  o.text = opt;
-  select.add(o);
-});
+    wheel.classList.remove("spin");
+    void wheel.offsetWidth; // reset animation
 
-function reveal() {
-  const userChoice = select.value;
-  if (!userChoice) {
-    alert("Choose something first 😄");
-    return;
+    const rotation = 1080 + Math.floor(Math.random() * 360);
+    wheel.style.setProperty("--rotation", rotation + "deg");
+    wheel.classList.add("spin");
+
+    setTimeout(() => {
+      const angle = rotation % 360;
+      const winner = angle < 180 ? "Achu" : "Gopu";
+      const dare = dares[Math.floor(Math.random() * dares.length)];
+
+      result.textContent = `🎉 ${winner} is chosen!`;
+      dareBox.textContent = `😈 Dare: ${dare}`;
+
+      btn.disabled = false;
+    }, 3500);
   }
-
-  if (userChoice === secret) {
-    document.getElementById("result").innerHTML =
-      "✨ TELEPATHY SUCCESS! 💞 You and Gopika are truly connected.";
-  } else {
-    document.getElementById("result").innerHTML =
-      `😅 Almost! You chose <b>${userChoice}</b>, I was thinking <b>${secret}</b>`;
-  }
-}
 </script>
 
 
