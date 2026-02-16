@@ -2,116 +2,81 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Love Truth or Dare 💕</title>
-
+<title>Truth or Dare ❤️</title>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
 body {
-  font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #ff758c, #ff7eb3);
+  font-family: Arial, sans-serif;
   text-align: center;
-  padding: 30px;
+  background: linear-gradient(135deg, #ff758c, #ff7eb3);
   color: white;
+  margin: 0;
+  padding: 0;
 }
 
-#wheelContainer {
+h1 {
+  margin-top: 20px;
+}
+
+.container {
+  margin-top: 30px;
   position: relative;
-  width: 280px;
-  height: 280px;
-  margin: 40px auto;
+  display: inline-block;
 }
 
-#wheel {
-  width: 100%;
-  height: 100%;
+.arrow {
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-bottom: 40px solid white;
+  margin: 0 auto;
+}
+
+canvas {
+  background: white;
   border-radius: 50%;
-  border: 8px solid white;
-  background: conic-gradient(
-    #4CAF50 0deg 180deg,
-    #ff3b3b 180deg 360deg
-  );
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  font-weight: bold;
-  transition: transform 3s cubic-bezier(0.33, 1, 0.68, 1);
-}
-
-#labels {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  font-size: 22px;
-  font-weight: bold;
-}
-
-.truthLabel {
-  position: absolute;
-  top: 25%;
-  color: white;
-}
-
-.dareLabel {
-  position: absolute;
-  bottom: 25%;
-  color: white;
-}
-
-#arrow {
-  position: absolute;
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 30px;
 }
 
 button {
   padding: 12px 25px;
+  margin-top: 20px;
   font-size: 18px;
   border: none;
-  border-radius: 12px;
-  cursor: pointer;
+  border-radius: 10px;
   background: white;
-  color: #ff3b3b;
+  color: #ff4e88;
+  cursor: pointer;
+  font-weight: bold;
 }
 
 #result {
-  margin-top: 30px;
+  margin-top: 20px;
   font-size: 20px;
-  min-height: 60px;
+  font-weight: bold;
+  min-height: 50px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>💕 Truth or Dare 💕</h1>
+<h1>Truth or Dare 💕</h1>
 
-<div id="wheelContainer">
-  <div id="arrow">⬇️</div>
-  <div id="wheel"></div>
-  <div id="labels">
-    <div class="truthLabel">TRUTH ❤️</div>
-    <div class="dareLabel">DARE 🔥</div>
-  </div>
+<div class="container">
+  <div class="arrow"></div>
+  <canvas id="wheel" width="400" height="400"></canvas>
 </div>
 
-<button onclick="spin()">SPIN 💞</button>
+<br>
+<button onclick="spin()">Spin 💫</button>
 
-<div id="result">Waiting for spin...</div>
+<div id="result"></div>
 
 <script>
-
-// 🔥 YOUR FIREBASE CONFIG ADDED
+/* 🔥 Firebase Config */
 const firebaseConfig = {
   apiKey: "AIzaSyDRKxX4m8PPPev4vHhYh9x5fSSaUmQIzO0",
   authDomain: "game-c4cb2.firebaseapp.com",
@@ -123,114 +88,104 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+const db = firebase.database();
 
-const wheel = document.getElementById("wheel");
-const resultDiv = document.getElementById("result");
-
-const truthQuestions = [
-  "When did you first realize you liked me? 💕",
-  "What was your first impression of me? 😏",
-  "What is one thing you find super attractive about me? 🔥",
-  "What is something you’ve never told me before? 🤭",
-  "When do you feel closest to me? ❤️",
-  "What is your favorite memory of us? 🥰",
-  "What is one thing I do that makes you melt? 😌",
-  "Have you ever been jealous because of me? 😉",
-  "What song reminds you of us? 🎶",
-  "What’s your favorite nickname for me? 💬",
-  "What is one habit of mine you secretly love? 😍",
-  "What’s one thing you want us to experience together? ✈️",
-  "What moment made you feel proud of me? 💖",
-  "If we were in a movie, what kind would it be? 🎬",
-  "What is one small detail about me you adore? 🌸",
-  "When do I look the cutest? 🥺",
-  "What is one thing you never want to lose in us? 💞",
-  "What do you think is our strongest bond? 💕",
-  "What is something you’re scared to lose in this relationship? ❤️",
-  "Describe me in three romantic words 😘",
-  "What is your favorite photo of us? 📸",
-  "What’s one thing I do better than anyone else? 😌",
-  "When did you miss me the most? 🥺",
-  "What’s your dream future with me? 💍",
-  "What’s your favorite thing about my voice? 🎤",
-  "What’s one small thing I do that makes you smile instantly? 😊",
-  "What’s one thing you want to improve in our relationship? 💬",
-  "When do you feel most loved by me? ❤️",
-  "What is one memory you replay in your head? 🎞️",
-  "If I were a song, what vibe would I be? 🎵"
+/* 💕 Questions */
+const truths = [
+"Who was your first crush?",
+"What is your biggest fear?",
+"Have you ever lied to me?",
+"What is your biggest insecurity?",
+"What is your secret fantasy?",
+"What do you love most about me?",
+"Have you ever stalked someone online?",
+"What is your most embarrassing moment?",
+"What is something you never told anyone?",
+"When did you first start liking me?",
+"What is your guilty pleasure?",
+"If you could change one thing about me what would it be?"
 ];
 
-
-const dareQuestions = [
-  "Send me your cutest selfie right now 📸",
-  "Blow me a kiss on camera 😘",
-  "Call me and say something romantic 💕",
-  "Send a voice note saying 'I miss you' 🥺",
-  "Sing one love line for me 🎶",
-  "Say 'I love you' in 3 different languages 🌍",
-  "Write a 2-line love poem for me 💌",
-  "Change my contact name to something romantic for 24 hours 📱",
-  "Send me a heart emoji every 5 minutes for 20 minutes ❤️",
-  "Tell me your biggest weakness for me 😏",
-  "Send me a childhood picture of you 👶",
-  "Describe our future in 10 seconds ⏳",
-  "Send a random cute couple GIF 💞",
-  "Say one thing you want to do with me soon 😉",
-  "Close your eyes and say what you feel about me right now 💖",
-  "Send me a mirror selfie with a cute caption 🪞",
-  "Tell me one fantasy date idea you have for us 🌙",
-  "Say my name in the sweetest voice possible 🎤",
-  "Send me a message starting with 'I’m lucky because...' 🍀",
-  "Record yourself saying something you love about me ❤️",
-  "Send a picture of your current expression 😄",
-  "Send a 5-second video saying something cute 💕",
-  "Compliment me without using the word 'love' 😏",
-  "Text me one memory you never want to forget 💭",
-  "Send a random heart emoji and nothing else ❤️",
-  "Tell me something you want to do next time we meet 🥰",
-  "Send your most recent photo right now 📷",
-  "Say something flirty in one sentence 😉",
-  "Describe me using only emojis 😍",
-  "Send a voice note whispering something sweet 💌"
+const dares = [
+"Send me a voice note saying I love you.",
+"Do your cutest dance and send video.",
+"Call me and sing a romantic song.",
+"Change your DP to my picture for 1 day.",
+"Write my name on your hand and send pic.",
+"Send me your funniest selfie.",
+"Say something spicy about me.",
+"Tell me why I am your favorite person.",
+"Act jealous for 1 minute.",
+"Send a heart emoji every minute for 5 minutes.",
+"Blow me a flying kiss on video.",
+"Say my name in your cutest voice."
 ];
 
+const options = ["Truth 💖", "Dare 🔥"];
 
-function spin() {
-  const spinDeg = Math.floor(Math.random() * 360) + 1440;
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+const size = canvas.width;
+const radius = size / 2;
+let rotation = 0;
 
-  database.ref("loveGame").set({
-    rotation: spinDeg,
-    time: Date.now()
-  });
+function drawWheel() {
+  const arc = Math.PI * 2 / options.length;
+  ctx.clearRect(0, 0, size, size);
+
+  for (let i = 0; i < options.length; i++) {
+    ctx.beginPath();
+    ctx.fillStyle = i % 2 === 0 ? "#ff758c" : "#ff4e88";
+    ctx.moveTo(radius, radius);
+    ctx.arc(radius, radius, radius, i * arc, (i + 1) * arc);
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(radius, radius);
+    ctx.rotate(i * arc + arc / 2);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "white";
+    ctx.font = "bold 20px Arial";
+    ctx.fillText(options[i], radius - 20, 10);
+    ctx.restore();
+  }
 }
 
-database.ref("loveGame").on("value", snapshot => {
-  const data = snapshot.val();
-  if (!data) return;
+drawWheel();
 
-  wheel.style.transform = `rotate(${data.rotation}deg)`;
+function spin() {
+  const spinAngle = Math.floor(Math.random() * 360 + 720);
+  rotation += spinAngle;
+
+  canvas.style.transition = "transform 4s ease-out";
+  canvas.style.transform = "rotate(" + rotation + "deg)";
 
   setTimeout(() => {
+    const actualDeg = rotation % 360;
+    const index = Math.floor((360 - actualDeg) / (360 / options.length)) % options.length;
+    showResult(options[index]);
+  }, 4000);
+}
 
-    const finalDeg = data.rotation % 360;
+function showResult(type) {
+  let question;
 
-    let challenge;
+  if (type.includes("Truth")) {
+    question = truths[Math.floor(Math.random() * truths.length)];
+  } else {
+    question = dares[Math.floor(Math.random() * dares.length)];
+  }
 
-    // Arrow points to top (0 degrees area)
-    if (finalDeg >= 0 && finalDeg < 180) {
-      challenge = "❤️ TRUTH: " + 
-        truthQuestions[Math.floor(Math.random() * truthQuestions.length)];
-    } else {
-      challenge = "🔥 DARE: " + 
-        dareQuestions[Math.floor(Math.random() * dareQuestions.length)];
-    }
+  document.getElementById("result").innerText = question;
+  db.ref("game").set({ question: question });
+}
 
-    resultDiv.innerText = challenge;
-
-  }, 3000);
+db.ref("game").on("value", snapshot => {
+  const data = snapshot.val();
+  if (data) {
+    document.getElementById("result").innerText = data.question;
+  }
 });
-
 </script>
 
 </body>
