@@ -2,89 +2,120 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Love Sync Game 💕</title>
+<title>Love Truth or Dare 💕</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
 body {
-  font-family: Arial;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #ff758c, #ff7eb3);
   text-align: center;
-  background: linear-gradient(135deg,#ff758c,#ff7eb3);
+  padding: 30px;
   color: white;
-  padding: 20px;
+}
+
+#wheelContainer {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  margin: 40px auto;
+}
+
+#wheel {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 8px solid white;
+  background: conic-gradient(
+    #4CAF50 0deg 180deg,
+    #ff3b3b 180deg 360deg
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: bold;
+  transition: transform 3s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+#labels {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.truthLabel {
+  position: absolute;
+  top: 25%;
+  color: white;
+}
+
+.dareLabel {
+  position: absolute;
+  bottom: 25%;
+  color: white;
+}
+
+#arrow {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 30px;
 }
 
 button {
-  padding: 15px 30px;
+  padding: 12px 25px;
   font-size: 18px;
   border: none;
   border-radius: 12px;
-  margin: 10px;
   cursor: pointer;
-}
-
-#loveBar {
-  width: 80%;
-  height: 30px;
   background: white;
-  border-radius: 20px;
-  margin: 20px auto;
-  overflow: hidden;
+  color: #ff3b3b;
 }
 
-#progress {
-  height: 100%;
-  width: 0%;
-  background: red;
-  transition: width 0.3s;
-}
-
-#note {
-  margin-top: 20px;
-  font-size: 18px;
-  display: none;
-}
-
-#game {
-  display:none;
+#result {
+  margin-top: 30px;
+  font-size: 20px;
+  min-height: 60px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Love Sync Game 💞</h2>
+<h1>💕 Truth or Dare 💕</h1>
 
-<input id="roomInput" placeholder="Enter Room Code">
-<button onclick="joinRoom()">Join</button>
-
-<div id="game">
-  <h3 id="levelText">Level 1</h3>
-
-  <div id="loveBar">
-    <div id="progress"></div>
+<div id="wheelContainer">
+  <div id="arrow">⬇️</div>
+  <div id="wheel"></div>
+  <div id="labels">
+    <div class="truthLabel">TRUTH ❤️</div>
+    <div class="dareLabel">DARE 🔥</div>
   </div>
-
-  <button 
-    onmousedown="holdStart()" 
-    onmouseup="holdEnd()" 
-    ontouchstart="holdStart()" 
-    ontouchend="holdEnd()">
-    Hold To Stay Connected 💞
-  </button>
-
-  <div id="note"></div>
 </div>
+
+<button onclick="spin()">SPIN 💞</button>
+
+<div id="result">Waiting for spin...</div>
 
 <script>
 
-// 🔥 YOUR FIREBASE CONFIG
-var firebaseConfig = {
-  apiKey: "AIzaSyDRKxX4m8PPPev4vHhYhh9x5fSSaUmQIzO0",
+// 🔥 YOUR FIREBASE CONFIG ADDED
+const firebaseConfig = {
+  apiKey: "AIzaSyDRKxX4m8PPPev4vHhYh9x5fSSaUmQIzO0",
   authDomain: "game-c4cb2.firebaseapp.com",
-  databaseURL: "https://game-c4cb2-default-rtdb.firebaseio.com/",
+  databaseURL: "https://game-c4cb2-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "game-c4cb2",
   storageBucket: "game-c4cb2.firebasestorage.app",
   messagingSenderId: "413339168960",
@@ -92,116 +123,115 @@ var firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-var db = firebase.database();
+const database = firebase.database();
 
-var room = "";
-var level = 1;
-var holding = false;
+const wheel = document.getElementById("wheel");
+const resultDiv = document.getElementById("result");
 
-var targets = [100, 160, 230, 320, 450];
-
-var loveNotes = [
-  "Level 1 💖 Even small effort together feels magical.",
-  "Level 2 💕 When we hold on, we grow stronger.",
-  "Level 3 ❤️ Distance means nothing when hearts sync.",
-  "Level 4 💞 We are unstoppable when we stay connected.",
-  "Final Level 💍 No matter what level life gives us… I choose you forever."
+const truthQuestions = [
+  "When did you first realize you liked me? 💕",
+  "What was your first impression of me? 😏",
+  "What is one thing you find super attractive about me? 🔥",
+  "What is something you’ve never told me before? 🤭",
+  "When do you feel closest to me? ❤️",
+  "What is your favorite memory of us? 🥰",
+  "What is one thing I do that makes you melt? 😌",
+  "Have you ever been jealous because of me? 😉",
+  "What song reminds you of us? 🎶",
+  "What’s your favorite nickname for me? 💬",
+  "What is one habit of mine you secretly love? 😍",
+  "What’s one thing you want us to experience together? ✈️",
+  "What moment made you feel proud of me? 💖",
+  "If we were in a movie, what kind would it be? 🎬",
+  "What is one small detail about me you adore? 🌸",
+  "When do I look the cutest? 🥺",
+  "What is one thing you never want to lose in us? 💞",
+  "What do you think is our strongest bond? 💕",
+  "What is something you’re scared to lose in this relationship? ❤️",
+  "Describe me in three romantic words 😘",
+  "What is your favorite photo of us? 📸",
+  "What’s one thing I do better than anyone else? 😌",
+  "When did you miss me the most? 🥺",
+  "What’s your dream future with me? 💍",
+  "What’s your favorite thing about my voice? 🎤",
+  "What’s one small thing I do that makes you smile instantly? 😊",
+  "What’s one thing you want to improve in our relationship? 💬",
+  "When do you feel most loved by me? ❤️",
+  "What is one memory you replay in your head? 🎞️",
+  "If I were a song, what vibe would I be? 🎵"
 ];
 
-function joinRoom() {
-  room = document.getElementById("roomInput").value;
-  if (!room) return;
 
-  document.getElementById("game").style.display = "block";
+const dareQuestions = [
+  "Send me your cutest selfie right now 📸",
+  "Blow me a kiss on camera 😘",
+  "Call me and say something romantic 💕",
+  "Send a voice note saying 'I miss you' 🥺",
+  "Sing one love line for me 🎶",
+  "Say 'I love you' in 3 different languages 🌍",
+  "Write a 2-line love poem for me 💌",
+  "Change my contact name to something romantic for 24 hours 📱",
+  "Send me a heart emoji every 5 minutes for 20 minutes ❤️",
+  "Tell me your biggest weakness for me 😏",
+  "Send me a childhood picture of you 👶",
+  "Describe our future in 10 seconds ⏳",
+  "Send a random cute couple GIF 💞",
+  "Say one thing you want to do with me soon 😉",
+  "Close your eyes and say what you feel about me right now 💖",
+  "Send me a mirror selfie with a cute caption 🪞",
+  "Tell me one fantasy date idea you have for us 🌙",
+  "Say my name in the sweetest voice possible 🎤",
+  "Send me a message starting with 'I’m lucky because...' 🍀",
+  "Record yourself saying something you love about me ❤️",
+  "Send a picture of your current expression 😄",
+  "Send a 5-second video saying something cute 💕",
+  "Compliment me without using the word 'love' 😏",
+  "Text me one memory you never want to forget 💭",
+  "Send a random heart emoji and nothing else ❤️",
+  "Tell me something you want to do next time we meet 🥰",
+  "Send your most recent photo right now 📷",
+  "Say something flirty in one sentence 😉",
+  "Describe me using only emojis 😍",
+  "Send a voice note whispering something sweet 💌"
+];
 
-  var roomRef = db.ref("rooms/" + room);
 
-  roomRef.once("value").then(snapshot => {
-    if (!snapshot.exists()) {
-      roomRef.set({
-        energy: 0,
-        level: 1,
-        playersHolding: 0
-      });
-    }
+function spin() {
+  const spinDeg = Math.floor(Math.random() * 360) + 1440;
+
+  database.ref("loveGame").set({
+    rotation: spinDeg,
+    time: Date.now()
   });
-
-  roomRef.on("value", snapshot => {
-    var data = snapshot.val();
-    if (!data) return;
-
-    level = data.level;
-    var energy = data.energy;
-
-    document.getElementById("levelText").innerText = "Level " + level;
-
-    var percent = (energy / targets[level-1]) * 100;
-    document.getElementById("progress").style.width = percent + "%";
-
-    if (energy >= targets[level-1]) {
-      showNote(level-1);
-
-      setTimeout(() => {
-        roomRef.update({
-          energy: 0,
-          level: level + 1
-        });
-      }, 4000);
-    }
-  });
-
-  startEnergyLoop();
 }
 
-function startEnergyLoop() {
-  setInterval(() => {
-    if (!room) return;
+database.ref("loveGame").on("value", snapshot => {
+  const data = snapshot.val();
+  if (!data) return;
 
-    var roomRef = db.ref("rooms/" + room);
-
-    roomRef.transaction(data => {
-      if (!data) return data;
-
-      if (data.playersHolding >= 2) {
-        data.energy += 8;
-      } else {
-        data.energy -= (5 + level);
-      }
-
-      if (data.energy < 0) data.energy = 0;
-
-      return data;
-    });
-
-  }, 500);
-}
-
-function holdStart() {
-  if (!room || holding) return;
-  holding = true;
-
-  db.ref("rooms/" + room + "/playersHolding")
-    .transaction(val => (val || 0) + 1);
-}
-
-function holdEnd() {
-  if (!room || !holding) return;
-  holding = false;
-
-  db.ref("rooms/" + room + "/playersHolding")
-    .transaction(val => Math.max((val || 1) - 1, 0));
-}
-
-function showNote(index) {
-  var note = document.getElementById("note");
-  note.innerText = loveNotes[index];
-  note.style.display = "block";
+  wheel.style.transform = `rotate(${data.rotation}deg)`;
 
   setTimeout(() => {
-    note.style.display = "none";
-  }, 3500);
-}
+
+    const finalDeg = data.rotation % 360;
+
+    let challenge;
+
+    // Arrow points to top (0 degrees area)
+    if (finalDeg >= 0 && finalDeg < 180) {
+      challenge = "❤️ TRUTH: " + 
+        truthQuestions[Math.floor(Math.random() * truthQuestions.length)];
+    } else {
+      challenge = "🔥 DARE: " + 
+        dareQuestions[Math.floor(Math.random() * dareQuestions.length)];
+    }
+
+    resultDiv.innerText = challenge;
+
+  }, 3000);
+});
 
 </script>
+
 </body>
 </html>
